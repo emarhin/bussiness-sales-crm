@@ -57,7 +57,6 @@
 # # Start Apache
 # # ==========================
 # CMD ["apache2-foreground"]
-
 FROM php:8.3-cli
 
 WORKDIR /app
@@ -86,7 +85,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+# 🔥 Prevent artisan from running during build
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 RUN chmod -R 775 storage bootstrap/cache
 
