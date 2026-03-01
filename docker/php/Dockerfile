@@ -12,15 +12,15 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev
 
-# Install PHP extensions
+# Configure GD
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
+# Install PHP extensions
 RUN docker-php-ext-install \
     pdo \
     pdo_mysql \
     mbstring \
     exif \
-    pcntl \
     bcmath \
     gd \
     zip
