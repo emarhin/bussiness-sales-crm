@@ -58,21 +58,12 @@
 # # ==========================
 # CMD ["apache2-foreground"]
 
-
-
-
 FROM php:8.2-apache
 
 WORKDIR /var/www/html
 
-# Make absolutely sure only prefork exists
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
-    && rm -f /etc/apache2/mods-enabled/mpm_worker.load \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite
-
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libonig-dev \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
@@ -90,9 +81,19 @@ RUN apt-get update && apt-get install -y \
         bcmath \
         gd \
         zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . /var/www/html
+# Enable rewrite only (DO NOT TOUCH MPM)
+RUN a2enmod rewrite
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copy project
+COPY . .
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
 
 RUN chown -R www-data:www-data /var/www/html
 
