@@ -59,13 +59,12 @@
 # CMD ["apache2-foreground"]
 
 
-# Dockerfile
-FROM php:8.2-fpm
+# Stage 0: Base PHP image
+FROM php:8.2-fpm AS base
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies and PHP extensions
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libonig-dev \
     libzip-dev \
@@ -77,7 +76,10 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     npm \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         pdo \
         pdo_mysql \
@@ -87,23 +89,19 @@ RUN apt-get update && apt-get install -y \
         gd \
         zip \
         xml \
-        curl \
-        json \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+        curl
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy application code
+# Copy project files
 COPY . .
 
-# Set permissions for storage and cache
+# Set permissions
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-# Start PHP-FPM
 CMD ["php-fpm"]
