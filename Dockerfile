@@ -57,6 +57,47 @@
 # # Start Apache
 # # ==========================
 # CMD ["apache2-foreground"]
+
+
+
+
+# FROM php:8.3-cli
+
+# WORKDIR /app
+
+# RUN apt-get update && apt-get install -y \
+#     git \
+#     curl \
+#     unzip \
+#     libzip-dev \
+#     libpng-dev \
+#     libjpeg-dev \
+#     libfreetype6-dev \
+#     libonig-dev \
+#     zip \
+#     && docker-php-ext-configure gd --with-freetype --with-jpeg \
+#     && docker-php-ext-install \
+#         pdo \
+#         pdo_mysql \
+#         mbstring \
+#         bcmath \
+#         exif \
+#         gd \
+#         zip
+
+# COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# COPY . .
+
+# # 🔥 Prevent artisan from running during build
+# RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# RUN chmod -R 775 storage bootstrap/cache
+
+# CMD php artisan serve --host=0.0.0.0 --port=${PORT}
+
+
+
 FROM php:8.3-cli
 
 WORKDIR /app
@@ -85,8 +126,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
-# 🔥 Prevent artisan from running during build
 RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# 🔥 Create Laravel required directories
+RUN mkdir -p storage/framework/views \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/logs \
+    bootstrap/cache
 
 RUN chmod -R 775 storage bootstrap/cache
 
