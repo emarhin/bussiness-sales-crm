@@ -57,6 +57,10 @@
 # # Start Apache
 # # ==========================
 # CMD ["apache2-foreground"]
+
+
+
+
 FROM php:8.2-apache
 
 WORKDIR /var/www/html
@@ -83,10 +87,6 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN a2enmod rewrite
-
-# 🔥 Fix MPM conflict
-RUN a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork
 
 COPY . /var/www/html
 
