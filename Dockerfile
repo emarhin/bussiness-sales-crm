@@ -65,6 +65,12 @@ FROM php:8.2-apache
 
 WORKDIR /var/www/html
 
+# Make absolutely sure only prefork exists
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
+    && rm -f /etc/apache2/mods-enabled/mpm_worker.load \
+    && a2enmod mpm_prefork \
+    && a2enmod rewrite
+
 RUN apt-get update && apt-get install -y \
     libonig-dev \
     libzip-dev \
@@ -86,12 +92,9 @@ RUN apt-get update && apt-get install -y \
         zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN a2enmod rewrite
-
 COPY . /var/www/html
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
 
