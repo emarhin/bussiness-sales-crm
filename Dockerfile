@@ -58,33 +58,31 @@
 # # ==========================
 # CMD ["apache2-foreground"]
 
-FROM php:8.2-apache
 
-WORKDIR /var/www/html
+FROM php:8.2-cli
+
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    unzip \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libonig-dev \
     zip \
-    unzip \
-    git \
-    curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         pdo \
         pdo_mysql \
         mbstring \
-        exif \
         bcmath \
+        exif \
         gd \
-        zip \
-    && rm -rf /var/lib/apt/lists/*
-
-# Enable rewrite only (DO NOT TOUCH MPM)
-RUN a2enmod rewrite
+        zip
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -92,11 +90,11 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Copy project
 COPY . .
 
-# Install PHP dependencies
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-RUN chown -R www-data:www-data /var/www/html
+# Fix permissions
+RUN chmod -R 775 storage bootstrap/cache
 
-EXPOSE 80
-
-CMD ["apache2-foreground"]
+# Railway uses PORT env variable
+CMD php artisan serve --host=0.0.0.0 --port=${PORT}
