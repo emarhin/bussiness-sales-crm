@@ -58,12 +58,10 @@
 # # ==========================
 # CMD ["apache2-foreground"]
 
-
-FROM php:8.2-cli
+FROM php:8.3-cli
 
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -84,17 +82,12 @@ RUN apt-get update && apt-get install -y \
         gd \
         zip
 
-# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy project
 COPY . .
 
-# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Fix permissions
 RUN chmod -R 775 storage bootstrap/cache
 
-# Railway uses PORT env variable
 CMD php artisan serve --host=0.0.0.0 --port=${PORT}
