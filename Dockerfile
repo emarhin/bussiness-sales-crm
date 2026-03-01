@@ -57,24 +57,12 @@
 # # Start Apache
 # # ==========================
 # CMD ["apache2-foreground"]
-# ==========================
-# Base Image
-# ==========================
 FROM php:8.2-apache
 
-# ==========================
-# Disable conflicting MPMs
-# ==========================
+# Disable extra MPMs to avoid conflicts
 RUN a2dismod mpm_event mpm_worker || true
 
-# ==========================
-# Set working directory
-# ==========================
-WORKDIR /var/www/html
-
-# ==========================
-# Install system dependencies
-# ==========================
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     libonig-dev \
     libzip-dev \
@@ -100,28 +88,20 @@ RUN apt-get update && apt-get install -y \
         json \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ==========================
-# Enable Apache mod_rewrite
-# ==========================
+# Enable Apache rewrite module
 RUN a2enmod rewrite
 
-# ==========================
-# Copy project files
-# ==========================
-COPY . /var/www/html
+# Set working directory
+WORKDIR /var/www/html
 
-# ==========================
-# Set permissions
-# ==========================
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+# Copy application code
+COPY . /var/www/html/
 
-# ==========================
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html
+
 # Expose port 80
-# ==========================
 EXPOSE 80
 
-# ==========================
 # Start Apache
-# ==========================
 CMD ["apache2-foreground"]
